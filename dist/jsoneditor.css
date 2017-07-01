@@ -74,6 +74,10 @@ div.jsoneditor-value.jsoneditor-empty::after {
   content: "value";
 }
 
+div.jsoneditor-value:focus.jsoneditor-empty::after {
+  content: " ";
+}
+
 div.jsoneditor-value.jsoneditor-url,
 a.jsoneditor-value.jsoneditor-url {
   color: green;

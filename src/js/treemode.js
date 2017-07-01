@@ -789,6 +789,8 @@ treemode._onEvent = function (event) {
 
   if (event.type == 'focus') {
     this.focusTarget = event.target;
+    // initiate autocomplete for focus event
+    this._onKeyDown(event);
   }
 
   if (event.type == 'mousedown') {
@@ -1105,7 +1107,7 @@ treemode._onKeyDown = function (event) {
   }
 
   if ((this.options.autocomplete) && (!handled)) {
-    if (!ctrlKey && !altKey && !metaKey && (event.key.length == 1 || keynum == 8 || keynum == 46)) {
+    if (event.type !== 'focus' && !ctrlKey && !altKey && !metaKey && (event.key.length == 1 || keynum == 8 || keynum == 46)) {
       handled = false;
       var jsonElementType = "";
       if (event.target.className.indexOf("jsoneditor-value") >= 0) jsonElementType = "value";
@@ -1136,6 +1138,32 @@ treemode._onKeyDown = function (event) {
           this.autocomplete.hideDropDown();
 
       }.bind(this, node, event.target), 50);
+    }
+
+    // show autocomplete on focus event & for value field only
+    var isValueField = event.target.className.indexOf("jsoneditor-value") >= 0;
+
+    if (event.type === 'focus' && isValueField) {
+
+      var node = Node.getNodeFromTarget(event.target);
+      var result = this.options.autocomplete.getOptions(node.innerText, this.get(), jsonElementType, node.getPath());
+
+      if (typeof result.then === 'function') {
+        // probably a promise
+        result.then(function (obj) {
+          if (obj.options) {
+            this.autocomplete.show(event.target, obj.startFrom, obj.options);
+          } else {
+            this.autocomplete.show(event.target, 0, obj);
+          }
+        }.bind(this));
+      } else {
+        // definitely not a promise
+        if (result.options)
+          this.autocomplete.show(event.target, result.startFrom, result.options);
+        else
+          this.autocomplete.show(event.target, 0, result);
+      }
     }
   }
 
