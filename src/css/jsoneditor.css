@@ -47,6 +47,10 @@ div.jsoneditor-field.jsoneditor-empty::after {
   content: "field";
 }
 
+div.jsoneditor-field:focus.jsoneditor-empty::after {
+  content: " ";
+}
+
 div.jsoneditor-value.jsoneditor-empty::after {
   content: "value";
 }

@@ -9558,63 +9558,53 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if ((this.options.autocomplete) && (!handled)) {
-	    if (event.type !== 'focus' && !ctrlKey && !altKey && !metaKey && (event.key.length == 1 || keynum == 8 || keynum == 46)) {
-	      handled = false;
-	      var jsonElementType = "";
-	      if (event.target.className.indexOf("jsoneditor-value") >= 0) jsonElementType = "value";
-	      if (event.target.className.indexOf("jsoneditor-field") >= 0) jsonElementType = "field";
+	    var applyTo = this.options.autocomplete.applyTo;
 
-	      var node = Node.getNodeFromTarget(event.target);
-	      // Activate autocomplete
-	      setTimeout(function (hnode, element) {
-	        if (element.innerText.length > 0) {
-	          var result = this.options.autocomplete.getOptions(element.innerText, this.get(), jsonElementType, hnode.getPath());
-	          if (typeof result.then === 'function') {
-	            // probably a promise
-	            if (result.then(function (obj) {
-	                      if (obj.options)
-	                        this.autocomplete.show(element, obj.startFrom, obj.options);
-	                      else
-	                        this.autocomplete.show(element, 0, obj);
-	                    }.bind(this)));
-	          } else {
-	            // definitely not a promise
-	            if (result.options)
-	              this.autocomplete.show(element, result.startFrom, result.options);
-	            else
-	              this.autocomplete.show(element, 0, result);
-	          }
-	        }
-	        else
-	          this.autocomplete.hideDropDown();
+	    var jsonElementType = "";
+	    var isValue = event.target.className.indexOf("jsoneditor-value") >= 0;
+	    var isField = event.target.className.indexOf("jsoneditor-field") >= 0;
 
-	      }.bind(this, node, event.target), 50);
+	    if (isValue) jsonElementType = "value";
+	    if (isField) jsonElementType = "field";
+
+	    // check what options is allowed for autocomplete otherwise return
+	    if (applyTo && applyTo.length) {
+	      var isAllowed = applyTo.indexOf(jsonElementType) !== -1;
+
+	      if (!isAllowed) return;
 	    }
 
-	    // show autocomplete on focus event & for value field only
-	    var isValueField = event.target.className.indexOf("jsoneditor-value") >= 0;
-
-	    if (event.type === 'focus' && isValueField) {
+	    if (event.type === "focus" || !ctrlKey && !altKey && !metaKey && (event.key.length == 1 || keynum == 8 || keynum == 46)) {
+	      handled = false;
 
 	      var node = Node.getNodeFromTarget(event.target);
-	      var result = this.options.autocomplete.getOptions(node.innerText, this.get(), jsonElementType, node.getPath());
 
-	      if (typeof result.then === 'function') {
-	        // probably a promise
-	        result.then(function (obj) {
-	          if (obj.options) {
-	            this.autocomplete.show(event.target, obj.startFrom, obj.options);
+	      // Activate autocomplete
+	      setTimeout(function (hnode, element) {
+	        var result = this.options.autocomplete.getOptions(element.innerText, this.get(), jsonElementType, hnode.getPath());
+
+	        if (typeof result.then === 'function') {
+	          // probably a promise
+	          result.then(function (obj) {
+	            if (obj.options) {
+	              this.autocomplete.show(element, obj.startFrom, obj.options);
+	            } else {
+	              this.autocomplete.show(element, 0, obj);
+	            }
+	          }.bind(this));
+
+	        } else {
+
+	          // definitely not a promise
+	          if (result.options) {
+	            this.autocomplete.show(element, result.startFrom, result.options);
+
 	          } else {
-	            this.autocomplete.show(event.target, 0, obj);
+	            this.autocomplete.show(element, 0, result);
 	          }
-	        }.bind(this));
-	      } else {
-	        // definitely not a promise
-	        if (result.options)
-	          this.autocomplete.show(event.target, result.startFrom, result.options);
-	        else
-	          this.autocomplete.show(event.target, 0, result);
-	      }
+	        }
+
+	      }.bind(this, node, event.target), 50);
 	    }
 	  }
 
