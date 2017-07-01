@@ -1115,7 +1115,7 @@ treemode._onKeyDown = function (event) {
       // Activate autocomplete
       setTimeout(function (hnode, element) {
         if (element.innerText.length > 0) {
-          var result = this.options.autocomplete.getOptions(element.innerText, editor.get(), jsonElementType, hnode.getPath());
+          var result = this.options.autocomplete.getOptions(element.innerText, this.get(), jsonElementType, hnode.getPath());
           if (typeof result.then === 'function') {
             // probably a promise
             if (result.then(function (obj) {
