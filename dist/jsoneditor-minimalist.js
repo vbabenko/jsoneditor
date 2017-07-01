@@ -1590,7 +1590,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // Activate autocomplete
 	      setTimeout(function (hnode, element) {
 	        if (element.innerText.length > 0) {
-	          var result = this.options.autocomplete.getOptions(element.innerText, editor.get(), jsonElementType);
+	          var result = this.options.autocomplete.getOptions(element.innerText, editor.get(), jsonElementType, hnode.getPath());
 	          if (typeof result.then === 'function') {
 	            // probably a promise
 	            if (result.then(function (obj) {
