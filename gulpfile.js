@@ -22,8 +22,8 @@ function createBanner() {
   var version = require('./package.json').version;  // math.js version
 
   return String(fs.readFileSync(HEADER))
-      .replace('@@date', today)
-      .replace('@@version', version);
+          .replace('@@date', today)
+          .replace('@@version', version);
 }
 
 var bannerPlugin = new webpack.BannerPlugin(createBanner(), {
@@ -130,13 +130,14 @@ gulp.task('bundle-css', ['mkdir'], function () {
     'src/css/jsoneditor.css',
     'src/css/contextmenu.css',
     'src/css/menu.css',
-    'src/css/searchbox.css'
+    'src/css/searchbox.css',
+    'src/css/autocomplete.css'
   ])
-      .pipe(concatCss(NAME + '.css'))
-      .pipe(gulp.dest(DIST))
-      .pipe(concatCss(NAME + '.min.css'))
-      .pipe(minifyCSS())
-      .pipe(gulp.dest(DIST));
+          .pipe(concatCss(NAME + '.css'))
+          .pipe(gulp.dest(DIST))
+          .pipe(concatCss(NAME + '.min.css'))
+          .pipe(minifyCSS())
+          .pipe(gulp.dest(DIST));
 
   gutil.log('bundled ' + DIST + '/' + NAME + '.css');
   gutil.log('bundled ' + DIST + '/' + NAME + '.min.css');
@@ -145,14 +146,14 @@ gulp.task('bundle-css', ['mkdir'], function () {
 // create a folder img and copy the icons
 gulp.task('copy-img', ['mkdir'], function () {
   gulp.src(IMAGE)
-      .pipe(gulp.dest(DIST + '/img'));
+          .pipe(gulp.dest(DIST + '/img'));
   gutil.log('Copied images');
 });
 
 // create a folder img and copy the icons
 gulp.task('copy-docs', ['mkdir'], function () {
   gulp.src(DOCS)
-      .pipe(gulp.dest(DIST));
+          .pipe(gulp.dest(DIST));
   gutil.log('Copied doc');
 });
 
@@ -167,7 +168,7 @@ gulp.task('minify-minimalist', ['bundle-minimalist'], function () {
 // TODO: zip file using archiver
 var pkg = 'jsoneditor-' + require('./package.json').version + '.zip';
 gulp.task('zip', shell.task([
-      'zip ' + pkg + ' ' + 'README.md NOTICE LICENSE HISTORY.md index.html src dist docs examples -r '
+  'zip ' + pkg + ' ' + 'README.md NOTICE LICENSE HISTORY.md index.html src dist docs examples -r '
 ]));
 
 // The watch task (to automatically rebuild when the source code changes)

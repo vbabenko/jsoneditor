@@ -55,7 +55,7 @@ function JSONEditor (container, options, json) {
   var ieVersion = util.getInternetExplorerVersion();
   if (ieVersion != -1 && ieVersion < 9) {
     throw new Error('Unsupported browser, IE9 or newer required. ' +
-        'Please install the newest version of your browser.');
+            'Please install the newest version of your browser.');
   }
 
   if (options) {
@@ -79,8 +79,8 @@ function JSONEditor (container, options, json) {
     // validate options
     if (options) {
       var VALID_OPTIONS = [
-        'ace', 'theme',
         'ajv', 'schema','templates',
+        'ace', 'theme','autocomplete',
         'onChange', 'onEditable', 'onError', 'onModeChange',
         'escapeUnicode', 'history', 'search', 'mode', 'modes', 'name', 'indentation', 'sortObjectKeys'
       ];
@@ -288,11 +288,11 @@ JSONEditor.prototype.setSchema = function (schema) {
     }
 
     if (ajv) {
-        this.validateSchema = ajv.compile(schema);
+      this.validateSchema = ajv.compile(schema);
 
-        // add schema to the options, so that when switching to an other mode,
-        // the set schema is not lost
-        this.options.schema = schema;
+      // add schema to the options, so that when switching to an other mode,
+      // the set schema is not lost
+      this.options.schema = schema;
 
       // validate now
       this.validate();

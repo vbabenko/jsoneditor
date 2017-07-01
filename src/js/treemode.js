@@ -8,6 +8,7 @@ var ContextMenu = require('./ContextMenu');
 var Node = require('./Node');
 var ModeSwitcher = require('./ModeSwitcher');
 var util = require('./util');
+var autocomplete = require('./autocomplete');
 
 // create a mixin with the functions for tree mode
 var treemode = {};
@@ -50,6 +51,9 @@ treemode.create = function (container, options) {
   this.focusTarget = null;
 
   this._setOptions(options);
+
+  if (options.autocomplete)
+    this.autocomplete = new autocomplete(options.autocomplete);
 
   if (this.options.history && this.options.mode !== 'view') {
     this.history = new History(this);
@@ -107,7 +111,8 @@ treemode._setOptions = function (options) {
     history: true,
     mode: 'tree',
     name: undefined,   // field name of root node
-    schema: null
+    schema: null,
+    autocomplete: null
   };
 
   // copy all options
@@ -403,47 +408,47 @@ treemode.validate = function () {
     if (!valid) {
       // apply all new errors
       schemaErrors = this.validateSchema.errors
-          .map(function (error) {
-            return util.improveSchemaError(error);
-          })
-          .map(function findNode (error) {
-            return {
-              node: root.findNode(error.dataPath),
-              error: error
-            }
-          })
-          .filter(function hasNode (entry) {
-            return entry.node != null
-          });
+              .map(function (error) {
+                return util.improveSchemaError(error);
+              })
+              .map(function findNode (error) {
+                return {
+                  node: root.findNode(error.dataPath),
+                  error: error
+                }
+              })
+              .filter(function hasNode (entry) {
+                return entry.node != null
+              });
     }
   }
 
   // display the error in the nodes with a problem
   this.errorNodes = duplicateErrors
-      .concat(schemaErrors)
-      .reduce(function expandParents (all, entry) {
-        // expand parents, then merge such that parents come first and
-        // original entries last
-        return entry.node
-            .findParents()
-            .map(function (parent) {
-              return {
-                node: parent,
-                child: entry.node,
-                error: {
-                  message: parent.type === 'object'
-                      ? 'Contains invalid properties' // object
-                      : 'Contains invalid items'      // array
-                }
-              };
-            })
-            .concat(all, [entry]);
-      }, [])
-      // TODO: dedupe the parent nodes
-      .map(function setError (entry) {
-        entry.node.setError(entry.error, entry.child);
-        return entry.node;
-      });
+          .concat(schemaErrors)
+          .reduce(function expandParents (all, entry) {
+            // expand parents, then merge such that parents come first and
+            // original entries last
+            return entry.node
+                    .findParents()
+                    .map(function (parent) {
+                      return {
+                        node: parent,
+                        child: entry.node,
+                        error: {
+                          message: parent.type === 'object'
+                                  ? 'Contains invalid properties' // object
+                                  : 'Contains invalid items'      // array
+                        }
+                      };
+                    })
+                    .concat(all, [entry]);
+          }, [])
+          // TODO: dedupe the parent nodes
+          .map(function setError (entry) {
+            entry.node.setError(entry.error, entry.child);
+            return entry.node;
+          });
 };
 
 /**
@@ -473,7 +478,7 @@ treemode.startAutoScroll = function (mouseY) {
     this.autoScrollStep = ((top + margin) - mouseY) / 3;
   }
   else if (mouseY > bottom - margin &&
-      height + content.scrollTop < content.scrollHeight) {
+          height + content.scrollTop < content.scrollHeight) {
     this.autoScrollStep = ((bottom - margin) - mouseY) / 3;
   }
   else {
@@ -855,7 +860,7 @@ treemode._updateDragDistance = function (event) {
 
   this.dragDistanceEvent.dragDistance = Math.sqrt(diffX * diffX + diffY * diffY);
   this.dragDistanceEvent.hasMoved =
-      this.dragDistanceEvent.hasMoved || this.dragDistanceEvent.dragDistance > 10;
+          this.dragDistanceEvent.hasMoved || this.dragDistanceEvent.dragDistance > 10;
 
   event.dragDistance = this.dragDistanceEvent.dragDistance;
   event.hasMoved = this.dragDistanceEvent.hasMoved;
@@ -1051,7 +1056,9 @@ treemode._findTopLevelNodes = function (start, end) {
  */
 treemode._onKeyDown = function (event) {
   var keynum = event.which || event.keyCode;
+  var altKey = event.altKey;
   var ctrlKey = event.ctrlKey;
+  var metaKey = event.metaKey;
   var shiftKey = event.shiftKey;
   var handled = false;
 
@@ -1094,6 +1101,41 @@ treemode._onKeyDown = function (event) {
       // redo
       this._onRedo();
       handled = true;
+    }
+  }
+
+  if ((this.options.autocomplete) && (!handled)) {
+    if (!ctrlKey && !altKey && !metaKey && (event.key.length == 1 || keynum == 8 || keynum == 46)) {
+      handled = false;
+      var jsonElementType = "";
+      if (event.target.className.indexOf("jsoneditor-value") >= 0) jsonElementType = "value";
+      if (event.target.className.indexOf("jsoneditor-field") >= 0) jsonElementType = "field";
+
+      var node = Node.getNodeFromTarget(event.target);
+      // Activate autocomplete
+      setTimeout(function (hnode, element) {
+        if (element.innerText.length > 0) {
+          var result = this.options.autocomplete.getOptions(element.innerText, editor.get(), jsonElementType);
+          if (typeof result.then === 'function') {
+            // probably a promise
+            if (result.then(function (obj) {
+                      if (obj.options)
+                        this.autocomplete.show(element, obj.startFrom, obj.options);
+                      else
+                        this.autocomplete.show(element, 0, obj);
+                    }.bind(this)));
+          } else {
+            // definitely not a promise
+            if (result.options)
+              this.autocomplete.show(element, result.startFrom, result.options);
+            else
+              this.autocomplete.show(element, 0, result);
+          }
+        }
+        else
+          this.autocomplete.hideDropDown();
+
+      }.bind(this, node, event.target), 50);
     }
   }
 

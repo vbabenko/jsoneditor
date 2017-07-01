@@ -256,7 +256,7 @@ exports.type = function type (object) {
 var isUrlRegex = /^https?:\/\/\S+$/;
 exports.isUrl = function isUrl (text) {
   return (typeof text == 'string' || text instanceof String) &&
-      isUrlRegex.test(text);
+          isUrlRegex.test(text);
 };
 
 /**
@@ -431,7 +431,7 @@ exports.getSelectionOffset = function getSelectionOffset() {
   var range = exports.getSelection();
 
   if (range && 'startOffset' in range && 'endOffset' in range &&
-      range.startContainer && (range.startContainer == range.endContainer)) {
+          range.startContainer && (range.startContainer == range.endContainer)) {
     return {
       startOffset: range.startOffset,
       endOffset: range.endOffset,
@@ -715,9 +715,9 @@ exports.improveSchemaError = function (error) {
 exports.insideRect = function (parent, child, margin) {
   var _margin = margin !== undefined ? margin : 0;
   return child.left   - _margin >= parent.left
-      && child.right  + _margin <= parent.right
-      && child.top    - _margin >= parent.top
-      && child.bottom + _margin <= parent.bottom;
+          && child.right  + _margin <= parent.right
+          && child.top    - _margin >= parent.top
+          && child.bottom + _margin <= parent.bottom;
 };
 
 /**
@@ -776,3 +776,30 @@ exports.textDiff = function textDiff(oldText, newText) {
 
   return {start: start, end: newEnd};
 };
+
+// Polyfill for array remove
+(function (arr) {
+  arr.forEach(function (item) {
+    if (item.hasOwnProperty('remove')) {
+      return;
+    }
+    Object.defineProperty(item, 'remove', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function remove() {
+        if (this.parentNode != null)
+          this.parentNode.removeChild(this);
+      }
+    });
+  });
+})([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
+
+
+// Polyfill for startsWith
+if (!String.prototype.startsWith) {
+  String.prototype.startsWith = function (searchString, position) {
+    position = position || 0;
+    return this.substr(position, searchString.length) === searchString;
+  };
+}
